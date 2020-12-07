@@ -2,6 +2,7 @@ from random import choice
 import pymorphy2
 
 
+# test
 morph = pymorphy2.MorphAnalyzer(lang='ru')
 
 ass = ['жопа', 'ниггер', 'принцесса', 'очко',
