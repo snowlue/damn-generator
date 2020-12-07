@@ -2,22 +2,22 @@ from random import choice
 import pymorphy2
 
 
-def tag_value(slovo, number_v_slovare, tag): 
+def tag_val(slovo, number_v_slovare, tag): 
     """
     (слово, номер в словаре, тэг) = значение тэга
     gender, number, animacy
     """
-    if tag == "gender":
+    if tag == "gen":
         return morph.parse(slovo)[number_v_slovare].tag.gender
-    elif tag == "number":
+    elif tag == "num":
         return morph.parse(slovo)[number_v_slovare].tag.number
-    elif tag == "animacy":
+    elif tag == "ani":
         return morph.parse(slovo)[number_v_slovare].tag.animacy
 
 
-#=====================================================
 morph = pymorphy2.MorphAnalyzer(lang='ru')
 
+#=====================================================
 sush_mass = ['жопа', 'ниггер', 'очко', 'Ъ', 'гей', 'выборы']
 prilag_mass = ['голубой', 'анимешный', '']
 prinadl_mass = ['конь', 'кошкодевка']
@@ -29,12 +29,12 @@ padezh = choice(['gent', 'ablt', '']) # родит. - gent, творит. - ablt
 choose_from = choice(['gent', ''])
 
 if words[0] == 'гей':
-    gender = tag_value(words[0], 1, 'gender')
-    number = tag_value(words[0], 1, 'number')
+    gender = tag_val(words[0], 1, 'gen') #morph.parse(words[0])[1].tag.gender
+    number = tag_val(words[0], 1, 'num') #morph.parse(words[0])[1].tag.number
 else:
     try:
-        gender = tag_value(words[0], 0, 'gender')
-        number = tag_value(words[0], 0, 'number')
+        gender = tag_val(words[0], 0, 'gen') #morph.parse(words[0])[0].tag.gender
+        number = tag_val(words[0], 0, 'num') #morph.parse(words[0])[0].tag.number
         if number == 'plur':
             morph.parse(prilag)[0].inflect({number})
         else:
@@ -51,10 +51,10 @@ if prilag:
 
 if padezh:
     prinadl = choice(prinadl_mass)
-    if tag_value(words[-1], 0, 'animacy') == 'anim' and padezh == 'ablt':
+    if tag_val(words[-1], 0, 'ani') == 'anim' and padezh == 'ablt':
         words += ['c' if not prinadl.startswith('с') or prinadl.startswith('со') else 'co']
         words += [morph.parse(prinadl)[0].inflect({padezh}).word]
-    elif tag_value(words[-1], 0, 'animacy') == 'inan' and padezh == 'gent':
+    elif tag_val(words[-1], 0, 'ani') == 'inan' and padezh == 'gent':
         words += [morph.parse(prinadl)[0].inflect({padezh}).word]
 
 if choose_from:
