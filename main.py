@@ -35,22 +35,22 @@ if prilag:
         words = [morph.parse(prilag)[0].inflect({gender}).word] + [words[0]]
 
 if choose:
-    pr = choice(prinadl_mass)
+    prinadl = choice(prinadl_mass)
     if morph.parse(words[-1])[0].tag.animacy == 'anim' and choose == 'ablt':
-        words += ['c' if not pr.startswith('с') or pr.startswith('со') else 'co']
-        words += [morph.parse(pr)[0].inflect({choose}).word]
+        words += ['c' if not prinadl.startswith('с') or prinadl.startswith('со') else 'co']
+        words += [morph.parse(prinadl)[0].inflect({choose}).word]
     elif morph.parse(words[-1])[0].tag.animacy == 'inan' and choose == 'gent':
-        words += [morph.parse(pr)[0].inflect({choose}).word]
+        words += [morph.parse(prinadl)[0].inflect({choose}).word]
 
 if choose_country:
-    c = morph.parse(choice(from_mass))[0].inflect({choose_country})
-    if 'Abbr' in c.tag:
-        c = c.word.upper()
-    elif 'Geox' in c.tag:
-        c = c.word.capitalize()
+    country = morph.parse(choice(from_mass))[0].inflect({choose_country})
+    if 'Abbr' in country.tag:
+        country = country.word.upper()
+    elif 'Geox' in country.tag:
+        country = country.word.capitalize()
     else:
-        c = c.word
-    words += ['из ' + c]
+        country = country.word
+    words += ['из ' + country]
 
 
 print(' '.join(words))
