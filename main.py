@@ -32,11 +32,18 @@ def inflector(word: str or Parse, tags: Set[str], num_in_list: int = 0):
 morph = pymorphy2.MorphAnalyzer(lang='ru')
 
 # =====================================================
-sush_mass = ['жопа', 'ниггер', 'очко', 'Ъ', 'гей', 'выборы', 'ублюдки', 'Фёдор', 'Диляра Равильевна']
-prilag_mass = ['голубой', 'анимешный', 'тупой', 'карликовый', 'опущенный', 'голодный']
-prinadl_mass = ['шаболда', 'лошадь', 'кошкодевка', 'бомжи', '']
-from_mass = ['Дагестан', 'США', 'пещера', 'помойка', '']
-glagol_mass = ['толкает', 'уничтожает', 'долбится', 'насилует', 'ест', 'бьёт', '']
+sush_mass = ['жопа', 'ниггер', 'очко', 'Ъ', 'гей', 'выборы', 'ублюдки', 'Фёдор',
+             'Диляра Равильевна', 'Максим', 'мразь', 'пидор', 'мошонка',
+             'анимешник', 'импотент', 'говно', 'мать Максима', 'спермотоксикозник']
+prilag_mass = ['голубой', 'анимешный', 'тупой', 'карликовый',
+               'опущенный', 'голодный', 'новогодний', 'ссанинский', 'каловый', 'засранный']
+prinadl_mass = ['шаболда', 'лошадь', 'кошкодевка', 'бомжи',
+                'говно', 'рабы', 'украинцы', 'чеченцы', '']
+from_mass = ['Дагестан', 'США', 'пещера', 'помойка',
+             'наркопритон', 'рабство', 'подвал', 'хата Феди', 'ноготь', '']
+glagol_mass = ['толкать', 'уничтожать', 'долбиться',
+               'насиловать', 'жрать', 'бить', 'унижать',
+               'заебаться', 'обосраться', 'карать', '']
 
 
 # gent — родит., ablt - творит., accs - винит., accs - предл.
@@ -67,26 +74,36 @@ else:
 
 # ДОБАВЛЕНИЕ ПРИЛАГАТЕЛЬНОГО
 if prilag:  # если есть слово
-    if number == 'plur':
-        words = [inflector(prilag, {number, case}).word.capitalize()] + [sush]
+    if prilag == 'ссанинский':
+        prilag_parser = morph.parse(prilag)[1]
     else:
-        words = [inflector(prilag, {gender, case}).word.capitalize()] + [sush]
+        prilag_parser = morph.parse(prilag)[0]
+    if number == 'plur':
+        words = [inflector(prilag_parser, {number, 'nomn'}).word.capitalize()] + [words[0]]
+    else:
+        words = [inflector(prilag_parser, {gender, 'nomn'}).word.capitalize()] + [words[0]]
 else:
     capital = words[0].split()
     words = [capital[0].capitalize()] + capital[1:]
 
 # ВЫЧИСЛЕНИЕ ПРИНАДЛЕЖНОСТИ
 if from_:
-    if 'Abbr' in from_.tag:
-        from_ = from_.word.upper()
-    elif 'Geox' in from_.tag:
-        from_ = from_.word.capitalize()
+    from_ = [from_.split()[0], *from_.split()[1:]] if len(from_.split()) > 1 else [from_]
+    ffrom_ = inflector(from_[0], {padezh_from})
+    if 'Abbr' in ffrom_.tag:
+        ffrom_ = ffrom_.word.upper()
+    elif 'Geox' in ffrom_.tag:
+        ffrom_ = ffrom_.word.capitalize()
     else:
-        from_ = from_.word
+        ffrom_ = ffrom_.word
+
     if padezh_from == "gent":
-        locate = ['из ' + from_]
+        if ffrom_ == 'ногтя':
+            locate = ['из-под ' + ffrom_] + from_[1:]
+        else:
+            locate = ['из ' + ffrom_] + from_[1:]
     elif padezh_from == "loct":
-        locate = ['в ' + from_]
+        locate = ['в ' + ffrom_] + from_[1:]
 
 # ДОБАВЛЕНИЕ ГЛАГОЛА И ПРИНАДЛЕЖНОСТИ
 if prinadl:  # если есть падеж, значит есть и слово
