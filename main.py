@@ -25,22 +25,22 @@ def inflector(word: str or Parse, tags: Set[str], num_in_list: int = 0):
     if isinstance(word, Parse):
         return word.inflect(tags)
     else:
-        a = morph.parse(word)
         return morph.parse(word)[num_in_list].inflect(tags)
-
 
 morph = pymorphy2.MorphAnalyzer(lang='ru')
 
 # =====================================================
-sush_mass = ['жопа', 'ниггер', 'очко', 'Ъ', 'гей', 'выборы', 'ублюдки', 'Фёдор',
-             'Диляра Равильевна', 'Максим', 'мразь', 'пидор', 'мошонка',
-             'анимешник', 'импотент', 'говно', 'мать Максима', 'спермотоксикозник']
+sush_mass = ['жопа', 'ниггер', 'очко', 'Ъ', 'выборы', 'ублюдки', 'Фёдор',
+             'Максим', 'мразь', 'пидор', 'мошонка',
+             'анимешник', 'импотент', 'говно', 'мать Максима', 'спермотоксикозник', 
+             'транссексуал', 'уёбок', 'Барак Обама']
 prilag_mass = ['голубой', 'анимешный', 'тупой', 'карликовый',
-               'опущенный', 'голодный', 'новогодний', 'ссанинский', 'каловый', 'засранный']
+               'опущенный', 'голодный', 'новогодний', 'каловый', 'засранный']
 prinadl_mass = ['шаболда', 'лошадь', 'кошкодевка', 'бомжи',
                 'говно', 'рабы', 'украинцы', 'чеченцы', '']
 from_mass = ['Дагестан', 'США', 'пещера', 'помойка',
-             'наркопритон', 'рабство', 'подвал', 'хата Феди', 'ноготь', '']
+             'наркопритон', 'рабство', 'подвал', 'хата Феди', 'ноготь', 'Гейропа',
+             'хрущёвка', '']
 glagol_mass = ['толкать', 'уничтожать', 'долбиться',
                'насиловать', 'жрать', 'бить', 'унижать',
                'заебаться', 'обосраться', 'карать', '']
@@ -57,28 +57,20 @@ def generate_one():
     sush = words[0]
 
     # СБОР ИНФОРМАЦИИ О СУЩЕСТВИТЕЛЬНОМ
-    if sush == 'гей':
-        gender, number = 'masc', 'sing'
-    elif sush == 'Диляра Равильевна':
-        gender, number = 'femn', 'sing'
-    else:
-        sush = sush.split()[0] if len(sush.split()) > 1 else sush
-        gender = get_tag(sush, 'род')
-        number = get_tag(sush, 'число')
-        try:
-            if number == 'plur':
-                inflector(prilag, {number})
-            else:
-                inflector(prilag, {gender})
-        except Exception:
-            gender, number = 'neut', 'sing'
+    sush = sush.split()[0] if len(sush.split()) > 1 else sush
+    gender = get_tag(sush, 'род')
+    number = get_tag(sush, 'число')
+    try:
+        if number == 'plur':
+            inflector(prilag, {number})
+        else:
+            inflector(prilag, {gender})
+    except Exception:
+        gender, number = 'neut', 'sing'
 
     # ДОБАВЛЕНИЕ ПРИЛАГАТЕЛЬНОГО
     if prilag:  # если есть слово
-        if prilag == 'ссанинский':
-            prilag_parser = morph.parse(prilag)[1]
-        else:
-            prilag_parser = morph.parse(prilag)[0]
+        prilag_parser = morph.parse(prilag)[0]
         if number == 'plur':
             words = [inflector(prilag_parser, {number, 'nomn'}).word.capitalize()] + [words[0]]
         else:
@@ -103,7 +95,7 @@ def generate_one():
                 locate = ['из-под ' + ffrom_] + from_[1:]
             else:
                 locate = ['из ' + ffrom_] + from_[1:]
-        elif padezh_from == "loct":
+        elif padezh_from == "loct" and ffrom_ != 'ногте':
             locate = ['в ' + ffrom_] + from_[1:]
 
     # ДОБАВЛЕНИЕ ГЛАГОЛА И ПРИНАДЛЕЖНОСТИ
@@ -131,12 +123,12 @@ def generate_one():
             else:  # нет глагола
                 words += ['c' if not prinadl.startswith('с') or prinadl.startswith('со') else 'co']
                 words += [inflector(prinadl, {'ablt'}).word]
+        #elif get_tag(sush, 'одуш') == 'anim' and padezh_prinadl == 'gent' and glagol:
         elif get_tag(sush, 'одуш') == 'inan' and padezh_prinadl == 'gent':
             words += [inflector(prinadl, {padezh_prinadl}).word]
             if from_:
                 words += locate
-
-        return ' '.join(words)
+    return ' '.join(words)
 
 
 if __name__ == '__main__':
