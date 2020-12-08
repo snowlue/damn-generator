@@ -38,46 +38,41 @@ prinadl_mass = ['шаболда', 'лошадь', 'кошкодевка', 'бо�
 from_mass = ['Дагестан', 'США', 'пещера', 'помойка', '']
 glagol_mass = ['толкает', 'уничтожает', 'долбится', 'насилует', 'ест', 'бьёт', '']
 
-padezh_prinadl = choice(['gent', 'ablt'])  # gent — родит., ablt - творит., accs - винит., accs - предл.
+
+# gent — родит., ablt - творит., accs - винит., accs - предл.
+padezh_prinadl = choice(['gent', 'ablt'])
 padezh_from = choice(['gent', 'loct'])
 
-words = [choice(sush_mass)]
-prilag = choice(prilag_mass)
-prinadl = choice(prinadl_mass)
-glagol = choice(glagol_mass)
-from_ = inflector(choice(from_mass), {padezh_from})
+words, prilag = [choice(sush_mass)], choice(prilag_mass)
+prinadl, glagol, from_ = choice(prinadl_mass), choice(glagol_mass), choice(from_mass)
+# words, prilag, prinadl, glagol, from_  = ['ниггер'], 'тупой', 'рабы', 'обосраться', 'наркопритон'
 sush = words[0]
-
-case = ''
 
 # СБОР ИНФОРМАЦИИ О СУЩЕСТВИТЕЛЬНОМ
 if sush == 'гей':
-    gender = get_tag(sush, 'род', 1)
-    number = get_tag(sush, 'число', 1)
-    case = 'nomn'
+    gender, number = 'masc', 'sing'
+elif sush == 'Диляра Равильевна':
+    gender, number = 'femn', 'sing'
 else:
+    sush = sush.split()[0] if len(sush.split()) > 1 else sush
+    gender = get_tag(sush, 'род')
+    number = get_tag(sush, 'число')
     try:
-        gender = get_tag(sush, 'род')
-        number = get_tag(sush, 'число')
         if number == 'plur':
             inflector(prilag, {number})
         else:
             inflector(prilag, {gender})
     except Exception:
-        gender = 'neut'
-        number = 'sing'
-        case = 'nomn'
+        gender, number = 'neut', 'sing'
 
 # ДОБАВЛЕНИЕ ПРИЛАГАТЕЛЬНОГО
 if prilag:  # если есть слово
-    if not case:
-        case = get_tag(sush, 'падеж')
     if number == 'plur':
         words = [inflector(prilag, {number, case}).word.capitalize()] + [sush]
     else:
         words = [inflector(prilag, {gender, case}).word.capitalize()] + [sush]
 else:
-    capital = sush.split()
+    capital = words[0].split()
     words = [capital[0].capitalize()] + capital[1:]
 
 # ВЫЧИСЛЕНИЕ ПРИНАДЛЕЖНОСТИ
@@ -98,19 +93,22 @@ if prinadl:  # если есть падеж, значит есть и слово
     if get_tag(sush, 'одуш') == 'anim' and padezh_prinadl == 'ablt':
         if from_:
             words += locate
-        if glagol:  # глагол?
-            if 'intr' in morph.parse(glagol)[0].tag:  # совершенный вид
-                if number == 'plur':
+        if glagol:
+            if number == 'plur':
+                if glagol.endswith('ся'):
                     words += [inflector(glagol, {number}).word]
                 else:
-                    words += [glagol]
+                    words += [inflector(glagol, {number, '3per'}).word]
+            else:
+                if glagol.endswith('ся'):
+                    words += [inflector(glagol, {gender}).word]
+                else:
+                    words += [inflector(glagol, {'3per'}).word]
+
+            if 'intr' in morph.parse(glagol)[0].tag:  # совершенный вид
                 words += ['c' if not prinadl.startswith('с') or prinadl.startswith('со') else 'co']
                 words += [inflector(prinadl, {'ablt'}).word]
             elif 'tran' in morph.parse(glagol)[0].tag:
-                if number == 'plur':
-                    words += [inflector(glagol, {number}).word]
-                else:
-                    words += [glagol]
                 words += [inflector(prinadl, {'accs'}).word]
         else:  # нет глагола
             words += ['c' if not prinadl.startswith('с') or prinadl.startswith('со') else 'co']
