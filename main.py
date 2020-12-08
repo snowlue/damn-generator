@@ -32,18 +32,20 @@ morph = pymorphy2.MorphAnalyzer(lang='ru')
 # =====================================================
 sush_mass = ['жопа', 'ниггер', 'очко', 'Ъ', 'выборы', 'ублюдки', 'Фёдор',
              'Максим', 'мразь', 'пидор', 'мошонка',
-             'анимешник', 'импотент', 'говно', 'мать Максима', 'спермотоксикозник', 
-             'транссексуал', 'уёбок', 'Барак Обама']
+             'анимешник', 'импотент', 'говно', 'мать Максима', 
+             'спермотоксикозник', 'транссексуал', 'дебил']
 prilag_mass = ['голубой', 'анимешный', 'тупой', 'карликовый',
-               'опущенный', 'голодный', 'новогодний', 'каловый', 'засранный']
+               'опущенный', 'голодный', 'новогодний', 'каловый', 
+               'засранный', 'уродливый', 'униженный']
 prinadl_mass = ['шаболда', 'лошадь', 'кошкодевка', 'бомжи',
-                'говно', 'рабы', 'украинцы', 'чеченцы', '']
+                'говно', 'рабы', 'украинцы', 'чеченцы', 'анимешники', '']
 from_mass = ['Дагестан', 'США', 'пещера', 'помойка',
-             'наркопритон', 'рабство', 'подвал', 'хата Феди', 'ноготь', 'Гейропа',
-             'хрущёвка', '']
+             'наркопритон', 'рабство', 'подвал', 'хата Феди', 
+             'ноготь', 'Европа', 'хрущёвка', '']
 glagol_mass = ['толкать', 'уничтожать', 'долбиться',
                'насиловать', 'жрать', 'бить', 'унижать',
-               'заебаться', 'обосраться', 'карать', '']
+               'заебаться', 'обосраться на', 'карать', 'дрочить на', 
+               'пытать', 'ссать на', 'блевать на', '']
 
 
 def generate_one():
@@ -95,7 +97,7 @@ def generate_one():
                 locate = ['из-под ' + ffrom_] + from_[1:]
             else:
                 locate = ['из ' + ffrom_] + from_[1:]
-        elif padezh_from == "loct" and ffrom_ != 'ногте':
+        elif padezh_from == "loct":
             locate = ['в ' + ffrom_] + from_[1:]
 
     # ДОБАВЛЕНИЕ ГЛАГОЛА И ПРИНАДЛЕЖНОСТИ
@@ -104,6 +106,7 @@ def generate_one():
             if from_:
                 words += locate
             if glagol:
+                glagol, na = glagol.split()[0] if len(glagol.split()) > 1 else glagol, glagol.split()[1] if len(glagol.split()) > 1 else ''
                 if number == 'plur':
                     if glagol.endswith('ся'):
                         words += [inflector(glagol, {number}).word]
@@ -116,14 +119,25 @@ def generate_one():
                         words += [inflector(glagol, {'3per'}).word]
 
                 if 'intr' in morph.parse(glagol)[0].tag:  # совершенный вид
-                    words += ['c' if not prinadl.startswith('с') or prinadl.startswith('со') else 'co']
-                    words += [inflector(prinadl, {'ablt'}).word]
+                    if na:
+                        words += [na]
+                        if prinadl != 'анимешники':
+                            words += [inflector(prinadl, {'accs'}).word]
+                        else:
+                            words += [inflector(prinadl, {'gent'}).word]
+                    else:
+                        words += ['c' if not prinadl.startswith('с') or prinadl.startswith('со') else 'co']
+                        words += [inflector(prinadl, {'ablt'}).word]
                 elif 'tran' in morph.parse(glagol)[0].tag:
-                    words += [inflector(prinadl, {'accs'}).word]
+                    if na:
+                        words += [na]
+                    if prinadl != 'анимешники':
+                            words += [inflector(prinadl, {'accs'}).word]
+                    else:
+                        words += [inflector(prinadl, {'gent'}).word]
             else:  # нет глагола
                 words += ['c' if not prinadl.startswith('с') or prinadl.startswith('со') else 'co']
                 words += [inflector(prinadl, {'ablt'}).word]
-        #elif get_tag(sush, 'одуш') == 'anim' and padezh_prinadl == 'gent' and glagol:
         elif get_tag(sush, 'одуш') == 'inan' and padezh_prinadl == 'gent':
             words += [inflector(prinadl, {padezh_prinadl}).word]
             if from_:
