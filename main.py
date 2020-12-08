@@ -1,56 +1,63 @@
 from random import choice
+from typing import Set
 import pymorphy2
 
 
-def get_tag(slovo, num_in_dict, tag):
+def get_tag(word: str, tag: str, num_in_list: int=0):
     """
-    (слово, номер в словаре, тег) = значение тега
-    gender, number, animacy
+    (слово, тег, номер в списке рез-ов) -> значение тега
     """
-    if tag == "род":
-        return morph.parse(slovo)[num_in_dict].tag.gender
-    elif tag == "число":
-        return morph.parse(slovo)[num_in_dict].tag.number
-    elif tag == "одуш":
-        return morph.parse(slovo)[num_in_dict].tag.animacy
-    elif tag == "падеж":
-        return morph.parse(slovo)[num_in_dict].tag.case
+    if tag == 'род':
+        return morph.parse(word)[num_in_list].tag.gender
+    elif tag == 'число':
+        return morph.parse(word)[num_in_list].tag.number
+    elif tag == 'одуш':
+        return morph.parse(word)[num_in_list].tag.animacy
+    elif tag == 'падеж':
+        return morph.parse(word)[num_in_list].tag.case
+
+
+def inflector(word: str, tags: Set[str], num_in_list: int=0):
+    """
+    (слово, теги, номер в списке рез-ов) -> объект parse
+    """
+    return morph.parse(word)[num_in_list].inflect(tags)
 
 
 morph = pymorphy2.MorphAnalyzer(lang='ru')
 
 # =====================================================
 sush_mass = ['жопа', 'ниггер', 'очко', 'Ъ', 'гей', 'выборы', 'ублюдки', 'Фёдор', 'Диляра Равильевна']
-prilag_mass = ['голубой', 'анимешный', 'тупой', 'карликовый', 'опущенный', '']
+prilag_mass = ['голубой', 'анимешный', 'тупой', 'карликовый', 'опущенный', 'голодный']
 prinadl_mass = ['шаболда', 'лошадь', 'кошкодевка', 'бомжи', '']
 from_mass = ['Дагестан', 'США', 'пещера', 'помойка', '']
 glagol_mass = ['толкает', 'уничтожает', 'долбится', 'насилует', 'ест', 'бьёт', '']
 
-padezh_prinadl = choice(['gent', 'ablt']) # родит. - gent, творит. - ablt, винит. - accs, предл. - loct
+padezh_prinadl = choice(['gent', 'ablt'])  # gent — родит., ablt - творит., accs - винит., accs - предл.
 padezh_from = choice(['gent', 'loct'])
 
 words = [choice(sush_mass)]
 prilag = choice(prilag_mass)
 prinadl = choice(prinadl_mass)
 glagol = choice(glagol_mass)
-from_ = morph.parse(choice(from_mass))[0].inflect({padezh_from})
+from_ = inflector(choice(from_mass), {padezh_from})
 sush = words[0]
 
 case = ''
 
 # СБОР ИНФОРМАЦИИ О СУЩЕСТВИТЕЛЬНОМ
 if sush == 'гей':
-    gender = get_tag(sush, 1, 'род')
-    number = get_tag(sush, 1, 'число')
+    gender = get_tag(sush, 'род', 1)
+    number = get_tag(sush, 'число', 1)
     case = 'nomn'
 else:
     try:
-        gender = get_tag(sush, 0, 'род')
-        number = get_tag(sush, 0, 'число')
+        gender = get_tag(sush, 'род')
+        number = get_tag(sush, 'число')
         if number == 'plur':
-            morph.parse(prilag)[0].inflect({number})
+            inflector(prilag, {number})
         else:
-            morph.parse(prilag)[0].inflect({gender})
+            inflector(prilag, {gender})
     except Exception:
         gender = 'neut'
         number = 'sing'
@@ -58,12 +65,12 @@ else:
 
 # ДОБАВЛЕНИЕ ПРИЛАГАТЕЛЬНОГО
 if prilag:  # если есть слово
-    if case == '':
-        case = get_tag(sush, 0, 'падеж')
+    if not case:
+        case = get_tag(sush, 'падеж')
     if number == 'plur':
-        words = [morph.parse(prilag)[0].inflect({number, case}).word.capitalize()] + [sush]
+        words = [inflector(prilag, {number, case}).word.capitalize()] + [sush]
     else:
-        words = [morph.parse(prilag)[0].inflect({gender, case}).word.capitalize()] + [sush]
+        words = [inflector(prilag, {gender, case}).word.capitalize()] + [sush]
 else:
     capital = sush.split()
     words = [capital[0].capitalize()] + capital[1:]
@@ -83,28 +90,28 @@ if from_:
 
 # ДОБАВЛЕНИЕ ГЛАГОЛА И ПРИНАДЛЕЖНОСТИ
 if prinadl:  # если есть падеж, значит есть и слово
-    if get_tag(sush, 0, 'одуш') == 'anim' and padezh_prinadl == 'ablt':
+    if get_tag(sush, 'одуш') == 'anim' and padezh_prinadl == 'ablt':
         if from_:
             words += locate
         if glagol:  # глагол?
             if 'intr' in morph.parse(glagol)[0].tag:  # совершенный вид
                 if number == 'plur':
-                    words += [morph.parse(glagol)[0].inflect({number}).word]
+                    words += [inflector(glagol, {number}).word]
                 else:
                     words += [glagol]
                 words += ['c' if not prinadl.startswith('с') or prinadl.startswith('со') else 'co']
-                words += [morph.parse(prinadl)[0].inflect({'ablt'}).word]
+                words += [inflector(prinadl, {'ablt'}).word]
             elif 'tran' in morph.parse(glagol)[0].tag:
                 if number == 'plur':
-                    words += [morph.parse(glagol)[0].inflect({number}).word]
+                    words += [inflector(glagol, {number}).word]
                 else:
                     words += [glagol]
-                words += [morph.parse(prinadl)[0].inflect({'accs'}).word]
+                words += [inflector(prinadl, {'accs'}).word]
         else:  # нет глагола
             words += ['c' if not prinadl.startswith('с') or prinadl.startswith('со') else 'co']
-            words += [morph.parse(prinadl)[0].inflect({'ablt'}).word]
-    elif get_tag(sush, 0, 'одуш') == 'inan' and padezh_prinadl == 'gent':
-        words += [morph.parse(prinadl)[0].inflect({padezh_prinadl}).word]
+            words += [inflector(prinadl, {'ablt'}).word]
+    elif get_tag(sush, 'одуш') == 'inan' and padezh_prinadl == 'gent':
+        words += [inflector(prinadl, {padezh_prinadl}).word]
         if from_:
             words += locate
 
