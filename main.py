@@ -1,9 +1,10 @@
 from random import choice
 from typing import Set
 import pymorphy2
+from pymorphy2.analyzer import Parse
 
 
-def get_tag(word: str, tag: str, num_in_list: int=0):
+def get_tag(word: str, tag: str, num_in_list: int = 0):
     """
     (слово, тег, номер в списке рез-ов) -> значение тега
     """
@@ -17,11 +18,15 @@ def get_tag(word: str, tag: str, num_in_list: int=0):
         return morph.parse(word)[num_in_list].tag.case
 
 
-def inflector(word: str, tags: Set[str], num_in_list: int=0):
+def inflector(word: str or Parse, tags: Set[str], num_in_list: int = 0):
     """
-    (слово, теги, номер в списке рез-ов) -> объект parse
+    (слово | объект Parse, теги, номер в списке рез-ов) -> объект Parse
     """
-    return morph.parse(word)[num_in_list].inflect(tags)
+    if isinstance(word, Parse):
+        return word.inflect(tags)
+    else:
+        a = morph.parse(word)
+        return morph.parse(word)[num_in_list].inflect(tags)
 
 
 morph = pymorphy2.MorphAnalyzer(lang='ru')
