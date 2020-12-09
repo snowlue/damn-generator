@@ -43,7 +43,8 @@ from_mass = ['Дагестан', 'США', 'пещера', 'помойка',
              'хрущёвка', '']
 glagol_mass = ['толкать', 'уничтожать', 'долбиться',
                'насиловать', 'жрать', 'бить', 'унижать',
-               'заебаться', 'обосраться', 'карать', '']
+               'заебаться', 'обосраться на', 'карать', 'дрочить на', 
+               'пытать', 'ссать на', 'блевать на']
 
 
 def generate_one():
@@ -95,7 +96,7 @@ def generate_one():
                 locate = ['из-под ' + ffrom_] + from_[1:]
             else:
                 locate = ['из ' + ffrom_] + from_[1:]
-        elif padezh_from == "loct" and ffrom_ != 'ногте':
+        elif padezh_from == "loct":
             locate = ['в ' + ffrom_] + from_[1:]
 
     # ДОБАВЛЕНИЕ ГЛАГОЛА И ПРИНАДЛЕЖНОСТИ
@@ -104,6 +105,7 @@ def generate_one():
             if from_:
                 words += locate
             if glagol:
+                glagol, pf = (glagol.split()[0], glagol.split()[1]) if len(glagol.split()) == 2 else (glagol, '')
                 if number == 'plur':
                     if glagol.endswith('ся'):
                         words += [inflector(glagol, {number}).word]
@@ -116,10 +118,22 @@ def generate_one():
                         words += [inflector(glagol, {'3per'}).word]
 
                 if 'intr' in morph.parse(glagol)[0].tag:  # совершенный вид
-                    words += ['c' if not prinadl.startswith('с') or prinadl.startswith('со') else 'co']
-                    words += [inflector(prinadl, {'ablt'}).word]
+                    if pf:
+                        words += [pf]
+                        if prinadl != 'анимешники':
+                            words += [inflector(prinadl, {'accs'}).word]
+                        else:
+                            words += [inflector(prinadl, {'gent'}).word]
+                    else:
+                        words += ['c' if not prinadl.startswith('с') or prinadl.startswith('со') else 'co']
+                        words += [inflector(prinadl, {'ablt'}).word]
                 elif 'tran' in morph.parse(glagol)[0].tag:
-                    words += [inflector(prinadl, {'accs'}).word]
+                    if pf:
+                        words += [pf]
+                    if prinadl != 'анимешники':
+                        words += [inflector(prinadl, {'accs'}).word]
+                    else:
+                        words += [inflector(prinadl, {'gent'}).word]
             else:  # нет глагола
                 words += ['c' if not prinadl.startswith('с') or prinadl.startswith('со') else 'co']
                 words += [inflector(prinadl, {'ablt'}).word]
